@@ -33,6 +33,7 @@ import shutil
 import time
 
 import chromadb
+from .embedding import open_collection, query_args
 
 
 COLLECTION_NAME = "mempalace_drawers"
@@ -91,7 +92,7 @@ def scan_palace(palace_path=None, only_wing=None):
     print("  Loading...")
 
     client = chromadb.PersistentClient(path=palace_path)
-    col = client.get_collection(COLLECTION_NAME)
+    col = open_collection(client, COLLECTION_NAME)
 
     where = {"wing": only_wing} if only_wing else None
     total = col.count()
@@ -175,7 +176,7 @@ def prune_corrupt(palace_path=None, confirm=False):
         return
 
     client = chromadb.PersistentClient(path=palace_path)
-    col = client.get_collection(COLLECTION_NAME)
+    col = open_collection(client, COLLECTION_NAME)
     before = col.count()
     print(f"  Collection size before: {before:,}")
 
@@ -224,7 +225,7 @@ def rebuild_index(palace_path=None):
 
     client = chromadb.PersistentClient(path=palace_path)
     try:
-        col = client.get_collection(COLLECTION_NAME)
+        col = open_collection(client, COLLECTION_NAME)
         total = col.count()
     except Exception as e:
         print(f"  Error reading palace: {e}")
@@ -265,7 +266,7 @@ def rebuild_index(palace_path=None):
     # Rebuild with correct HNSW settings
     print("  Rebuilding collection with hnsw:space=cosine...")
     client.delete_collection(COLLECTION_NAME)
-    new_col = client.create_collection(COLLECTION_NAME, metadata={"hnsw:space": "cosine"})
+    new_col = open_collection(client, COLLECTION_NAME, metadata={"hnsw:space": "cosine"}, create=True)
 
     filed = 0
     for i in range(0, len(all_ids), batch_size):

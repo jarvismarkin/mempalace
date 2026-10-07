@@ -8,6 +8,7 @@ then re-imports everything into a fresh palace using the currently installed
 ChromaDB version.
 
 This fixes the 3.0.0 → 3.1.0 upgrade path where chromadb was downgraded
+from .embedding import open_collection, query_args
 from 1.5.x to 0.6.x, breaking the on-disk storage format.
 
 Usage:
@@ -130,7 +131,7 @@ def migrate(palace_path: str, dry_run: bool = False):
     # Try reading with current chromadb first
     try:
         client = chromadb.PersistentClient(path=palace_path)
-        col = client.get_collection("mempalace_drawers")
+        col = open_collection(client, "mempalace_drawers")
         count = col.count()
         print(f"\n  Palace is already readable by chromadb {chromadb.__version__}.")
         print(f"  {count} drawers found. No migration needed.")
@@ -178,7 +179,7 @@ def migrate(palace_path: str, dry_run: bool = False):
     temp_palace = tempfile.mkdtemp(prefix="mempalace_migrate_")
     print(f"  Creating fresh palace in {temp_palace}...")
     client = chromadb.PersistentClient(path=temp_palace)
-    col = client.get_or_create_collection("mempalace_drawers")
+    col = open_collection(client, "mempalace_drawers", create=True)
 
     # Re-import in batches
     batch_size = 500

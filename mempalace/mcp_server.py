@@ -31,6 +31,7 @@ from .version import __version__
 from .searcher import search_memories
 from .palace_graph import traverse, find_tunnels, graph_stats
 import chromadb
+from .embedding import open_collection, query_args
 
 from .knowledge_graph import KnowledgeGraph
 
@@ -118,9 +119,9 @@ def _get_collection(create=False):
     try:
         client = _get_client()
         if create:
-            _collection_cache = client.get_or_create_collection(_config.collection_name)
+            _collection_cache = open_collection(client, _config.collection_name, create=True)
         elif _collection_cache is None:
-            _collection_cache = client.get_collection(_config.collection_name)
+            _collection_cache = open_collection(client, _config.collection_name)
         return _collection_cache
     except Exception:
         return None
@@ -262,7 +263,7 @@ def tool_check_duplicate(content: str, threshold: float = 0.9):
         return _no_palace()
     try:
         results = col.query(
-            query_texts=[content],
+            **query_args([content]),
             n_results=5,
             include=["metadatas", "documents", "distances"],
         )

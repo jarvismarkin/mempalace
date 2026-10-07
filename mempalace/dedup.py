@@ -28,6 +28,7 @@ import time
 from collections import defaultdict
 
 import chromadb
+from .embedding import open_collection, query_args
 
 
 COLLECTION_NAME = "mempalace_drawers"
@@ -100,7 +101,7 @@ def dedup_source_group(col, drawer_ids, threshold=DEFAULT_THRESHOLD, dry_run=Tru
 
         try:
             results = col.query(
-                query_texts=[doc],
+                **query_args([doc]),
                 n_results=min(len(kept), 5),
                 include=["distances"],
             )
@@ -131,7 +132,7 @@ def show_stats(palace_path=None):
     """Show duplication statistics without making changes."""
     palace_path = palace_path or _get_palace_path()
     client = chromadb.PersistentClient(path=palace_path)
-    col = client.get_collection(COLLECTION_NAME)
+    col = open_collection(client, COLLECTION_NAME)
 
     groups = get_source_groups(col)
 
@@ -164,7 +165,7 @@ def dedup_palace(
     print(f"{'=' * 55}")
 
     client = chromadb.PersistentClient(path=palace_path)
-    col = client.get_collection(COLLECTION_NAME)
+    col = open_collection(client, COLLECTION_NAME)
 
     print(f"  Palace: {palace_path}")
     print(f"  Drawers: {col.count():,}")

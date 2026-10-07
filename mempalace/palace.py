@@ -6,6 +6,7 @@ Consolidates ChromaDB access patterns used by both miners and the MCP server.
 
 import os
 import chromadb
+from .embedding import open_collection, query_args
 
 SKIP_DIRS = {
     ".git",
@@ -43,9 +44,9 @@ def get_collection(palace_path: str, collection_name: str = "mempalace_drawers")
         pass
     client = chromadb.PersistentClient(path=palace_path)
     try:
-        return client.get_collection(collection_name)
+        return open_collection(client, collection_name)
     except Exception:
-        return client.create_collection(collection_name)
+        return open_collection(client, collection_name, create=True)
 
 
 def file_already_mined(collection, source_file: str, check_mtime: bool = False) -> bool:
